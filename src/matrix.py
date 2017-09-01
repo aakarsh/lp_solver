@@ -11,24 +11,9 @@ import decimal
 from decimal import Decimal
 from itertools import chain
 
-
 debug = False
 global_tolerance = 1e-12
 decimal.getcontext().prec = 64
-
-# going back to float seems to have increased delta
-
-
-
-class UnboundedError(Exception):
-    "Raised when the solution for given equations is unbounded "
-    pass
-
-class InfeasibleError(Exception):
-    "Raised when the solution for given equations is infeasible(has no-solution)."
-    pass
-
-
 
 class Matrix:
 

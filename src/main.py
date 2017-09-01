@@ -17,10 +17,11 @@ from scipy_lprog import *
 from tableau import *
 
 class Reader:
+    
     @staticmethod
     def parse(stream=sys.stdin,file=None):
         if file:
-            stream = open(file,"r")
+            stream = open(file,"r")            
         with stream as stream:
             n, m = list(map(int, stream.readline().split()))
             A = []
@@ -68,11 +69,11 @@ if __name__ =="__main__":
     print(Simplex.answer_type_str(anst))
 
     if anst == 0:
-        print(' '.join(list(map(lambda x : '%.18f' % x, ansx))))
+        print(' '.join(list( map( lambda x : '%.18f' % x, ansx))))
         simplex.verify_bounds(tolerance = global_tolerance)
 
         if args.verify:
-            simplex.verify_scipy(tolerance=global_tolerance)
+            simplex.verify_scipy(tolerance = global_tolerance)
 
     if args.scipy:
         print(simplex.solve_scipy())

@@ -12,6 +12,15 @@ from decimal import Decimal
 from itertools import chain
 from matrix import *
 
+class UnboundedError(Exception):
+    "Raised when the solution for given equations is unbounded "
+    pass
+
+class InfeasibleError(Exception):
+    "Raised when the solution for given equations is infeasible(has no-solution)."
+    pass
+
+
 class fp_ops:
 
     def __init__(self,rel_tol=global_tolerance, abs_tol=global_tolerance):
@@ -636,9 +645,9 @@ class Simplex:
                 simplex_basic_form = self.find_basic_feasible(idx)
 
                 try:
-                    if debug: print("-"*100)
+                    if debug: print("-" * 100)
                     if debug: print("========== Solve Transformed  basic form ========== ")
-                    opt,ansx = simplex_basic_form.solve(phase=1)
+                    opt,ansx = simplex_basic_form.solve( phase = 1)
                     if debug: print("========== End Transformed  basic form ========== ")
                     self.optimum = opt
                     self.assignment = ansx
