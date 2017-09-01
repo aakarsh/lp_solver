@@ -17,12 +17,24 @@ from matrix import *
 # TODO : Write tests for Infeasible and Unbounded solutions, other stuff here.
 
 class Tableau:
-    
     """ Tableau based solver which is based on lp solver in simplex. """
     
-    def __init__(self,A,b,c,n,m):
+    def __init__(self,A,b,c,m,n):
+        
+        """Called with A set of coefficieant for linear equations
+        along with their upper bound constraints b and the
+        coefficients for the objective function to maximize."""
+
+        debug = True
+                
         (self.A,self.b,self.c,
          self.n,self.m,self.v) = (A,b,c,n,m,0)
+
+        if debug:
+            print("n: %d  m:%d" % (n,m))
+            print("c: %s" % c)
+            print("b: %s" % b)
+            print("A:\n%s" % A)
             
         self.v = 0
         v = self.v
@@ -39,7 +51,13 @@ class Tableau:
         # Artificial variables for every negative value of b.
         self.n_artificial = (list_wrapper(b) < 0).count_nonzero()
 
-        self.T = Matrix.zeros([ m + 2 , self.n + self.n_slack + self.n_artificial + 1])
+        self.T = Matrix.zeros([ m + 2 ,
+                                self.n + self.n_slack + self.n_artificial + 1])
+        
+
+        if debug:
+            print("T :")
+            print(self.T)
 
         # copy objective
         self.T[-2,:n]  = -list_wrapper(c)
@@ -50,12 +68,19 @@ class Tableau:
 
         # copy A
         self.T[0:m,:n]   = A
+        
+        if debug:
+            print("copying coefficents:")
+            print("b:%s" %b)
+            print("T:")
+            print(self.T)
 
+            
         self.T.fill_diagonal([slice(0,m,1),
                               slice(n,n + self.n_slack, 1)],1)
 
         if debug:
-            print("After filling in the diagonals")
+            print("adding slack variables:")
             print("T:")
             print(self.T)
 
@@ -84,17 +109,20 @@ class Tableau:
                 slcount += 1
 
         if debug:
+            print("adding artificial variables")
+            print("artificial: %s "% artificial)
             print("T:")            
             print(self.T)
             print("basis variables: %s " % self.basis)
 
         for r in artificial:
             self.T[-1,:] = self.T[-1,:] - self.T[r,:]
+        
 
         if debug:
+            print("subtracting artifical variables from objective row  ")
             print("T:")
             print(self.T)
-
 
 
     def pivot_column(self,T,tol=global_tolerance):
@@ -105,6 +133,7 @@ class Tableau:
         ignored = lambda e: (e is None) or (e >= -tol)
         objective = T[-1,:-1].masked_where(ignored)
         return objective.min_index()
+
 
     def pivot_row(self,T,pivcol,tol,phase=1):
         """ Find the appropriate pivot row. """
@@ -159,8 +188,21 @@ class Tableau:
 
     def simplex_solve(self, T, n, basis, phase =2, tol = global_tolerance):
         # Ignore original and new objectives.
+        
+        # When called in phase-2 we are presented with both the original and the pseudo
+        # objective function. Thus we must ignore the last two rows.
+        debug=True
+
+        if debug:
+            print("simplex_solve")
+            print("T:")
+            print(T)            
+            print("n: %d" % n)
+            print("basis: %s " % basis)
+            
         if phase == 1:
             m = T.shape()[0] - 2
+            
         elif phase == 2:
             m = T.shape()[0] - 1
 
@@ -241,14 +283,15 @@ class Tableau:
         if status == 2: # infeasible solution
             raise InfeasibleError()
 
-        sys.exit(-1)
+
         status, complete = self.simplex_solve(self.T,self.n,self.basis,phase=2)
 
         if status == 0:
             obj,ansx = -self.T[-1,-1], [0] * self.nvars
         else:
-            raise Exception("Expected status == 0")
-
+            obj = -float('inf')
+            ansx=  [0] * self.nvars
+            
         print("found objective: %f" % obj)
 
         return (status,ansx)

@@ -49,31 +49,33 @@ if __name__ =="__main__":
 
     (A,b,c,n,m) = Reader.parse()
 
-    tableau = Tableau(A,b,c,n,m)
-    simplex = Simplex(A,b,c,n,m)
-    scipy   = SciPy(A,b,c,n,m)
 
+    print("-------------------- Tableau --------------------")
+    tableau = Tableau(A,b,c,n,m)
+    t_anst, t_ansx =  tableau.solve()
+    print("-------------------------------------------------")
+    
     print("-------------------- Scipy --------------------")
+    scipy   = SciPy(A,b,c,n,m)
+    
     l_anst, l_ansx = scipy.solve()
     print("---------------------End:Scipy--------------------")
 
-    print("-------------------- Simplex --------------------")
-    anst, ansx = simplex.solve()    
-    print("-----------------------------------------------")
-
-    print("-------------------- Tableau --------------------")
-    t_anst, t_ansx =  tableau.solve()
-    print("-------------------------------------------------")
+    # print("-------------------- Simplex --------------------")
+    # simplex = Simplex(A,b,c,n,m)
+    # anst, ansx = simplex.solve()
+    anst,ansx = None, [0]* n
+    # print("-----------------------------------------------")
 
 
     print(Simplex.answer_type_str(anst))
 
     if anst == 0:
         print(' '.join(list( map( lambda x : '%.18f' % x, ansx))))
-        simplex.verify_bounds(tolerance = global_tolerance)
+        #simplex.verify_bounds(tolerance = global_tolerance)
 
-        if args.verify:
-            simplex.verify_scipy(tolerance = global_tolerance)
+        # if args.verify:
+        #     simplex.verify_scipy(tolerance = global_tolerance)
 
     if args.scipy:
         print(simplex.solve_scipy())
