@@ -792,9 +792,13 @@ if __name__ =="__main__":
             print("%-15s | %15s | %4s " % s)
         print("---------------------------------------------------------------")
     
+    def answer_type_str(anst):
+        try:
+            return ["No solution","Bounded solution","Infinity"][anst+1]
+        except :
+            return "Unrecognized Answer : %s" % anst
 
-
-    print(Simplex.answer_type_str(t_anst))
+    print(answer_type_str(t_anst))
 
     if t_anst == 0:
         print(' '.join(list( map( lambda x : '%.18f' % x, t_ansx))))
