@@ -101,6 +101,7 @@ class Matrix:
 
             def do_assign(rs,cs,ctx):
                 r,c,count = ctx["r"],ctx["c"],ctx["count"]
+
                 if hasattr(value,"__getitem__"):
                     if r < len(value) and  hasattr(value[r],"__getitem__"):
                         if c < len(value[r]):
@@ -113,6 +114,13 @@ class Matrix:
                     self.matrix[rs][cs] = value
 
             self._map(row_slice,col_slice,do_assign)
+
+        # assume it is just a list of numbers?
+        # elif (isinstance(idx,list) or isinstance(idx,list_wrapper)) and hasattr(value,"__iter__"):            
+        #     value_iterator = iter(value)            
+        #     for i in idx:
+        #         self.matrix[i] = next(value_iterator)
+                
         else:
             self.matrix[idx] = value
 
@@ -184,7 +192,7 @@ class Matrix:
                 if first:
                     output += sep + " "
                     first=False
-                output += Matrix.PrettyPrinter.format_number(elem,width=14)
+                output += Matrix.PrettyPrinter.format_number(elem,width = 14)
                 output +=" %s " % sep
             output += end
             return output
@@ -329,7 +337,7 @@ class list_wrapper():
         return self.count(non_zero)
 
     def count_notnone(self):
-        def not_none(n): return not n is None 
+        def not_none(n): return not n is None
         return self.count(not_none)
 
     def zip_set(l,member_set,by = lambda x: True):

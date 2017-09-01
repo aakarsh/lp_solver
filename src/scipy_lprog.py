@@ -12,28 +12,38 @@ from decimal import Decimal
 from itertools import chain
 from matrix import *
 
+import sys
+import numpy as np
+import lprog
 
 class SciPy:
 
-    import sys
-    import numpy as np
-    import lprog
-
-    def __init__(self,A,b,c,n,m):
+    def __init__(self,A,b,c,n,m,debug=False):
         (self.A,self.b,self.c) =  (A,b,c)
         self.n = n
         self.m = m
+        self.debug = debug
 
     def solve(self,tolerance = global_tolerance):
-        import sys
-        import numpy as np
-        import lprog
+
         linprog_res = lprog.linprog([ -x for x in self.c ],
                                     A_ub = self.A,
                                     b_ub = self.b,
                                     options  = { 'tol': tolerance },
-                                    callback = lprog.linprog_verbose_callback)
-        print("%s" % linprog_res)
+                                    callback = lprog.linprog_verbose_callback if self.debug else None) 
+
+        if self.debug:
+            print("%s" % linprog_res)
+            print("x--:%s" % linprog_res.x)
+            print("status--:%s" % linprog_res.status)
+        
         if linprog_res.status == 0:
-            return (1,linprog_res.x)
+            return (0,linprog_res.x)
+        if linprog_res.status == 3: # unbounded
+            return (1,None)
+        if linprog_res.status == 2: # no solution
+            return (-1,None)                
+        else:
+            return (linprog_res.status,linprog_res.x)
+        
 

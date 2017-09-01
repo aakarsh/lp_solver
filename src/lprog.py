@@ -167,6 +167,7 @@ def _pivot_col(T, tol=1.0E-12, bland=False):
         The index of the column of the pivot element.
         If status is False, col will be returned as nan.
     """
+    debug=False
     if debug: print("=====================Start Pivot Column======================")
     ma = np.ma.masked_where(T[-1, :-1] >= -tol, T[-1, :-1], copy=False)
     if debug: print("%5s:%s"%("ma",ma))
@@ -212,6 +213,7 @@ def _pivot_row(T, pivcol, phase, tol=1.0E-12):
         The index of the row of the pivot element.  If status is False, row
         will be returned as nan.
     """
+    debug=False
     if debug: print("=====================Start Pivot Row======================")
     if phase == 1: k = 2
     else: k = 1
@@ -363,7 +365,7 @@ def _solve_simplex(T, n, basis, maxiter=1000, phase=2, callback=None,
         artificial_variables = [row for row in range(basis.size)
                                 if basis[row] > T.shape[1] - 2]
 
-        print("Artificial Variables : %s" % artificial_variables)
+        #print("Artificial Variables : %s" % artificial_variables)
 
         for pivrow in  artificial_variables:
             non_zero_row = [col for col in range(T.shape[1] - 1)
@@ -401,6 +403,7 @@ def _solve_simplex(T, n, basis, maxiter=1000, phase=2, callback=None,
             # Find the pivot row
             pivrow_found, pivrow = _pivot_row(T, pivcol, phase, tol)
             if not pivrow_found:
+                # unbounded solution
                 status = 3
                 complete = True
 
@@ -419,6 +422,7 @@ def _solve_simplex(T, n, basis, maxiter=1000, phase=2, callback=None,
         if not complete:
             if nit >= maxiter:
                 # Iteration limit exceeded
+                # Infeasible solution
                 status = 1
                 complete = True
             else:
@@ -577,7 +581,7 @@ def _linprog_simplex(c, A_ub=None, b_ub=None, A_eq=None, b_eq=None,
            Mathematics of Operations Research (2), 1977: pp. 103-107.
     """
     #_check_unknown_options(unknown_options)
-
+    debug=False
     status = 0
     messages = {0: "Optimization terminated successfully.",
                 1: "Iteration limit reached.",
@@ -710,7 +714,7 @@ def _linprog_simplex(c, A_ub=None, b_ub=None, A_eq=None, b_eq=None,
     meq = len(beq)
 
     # The total number of constraints
-    m = mub+meq
+    m = mub + meq
 
     # The number of slack variables (one for each of the upper-bound constraints)
     n_slack = mub
@@ -862,14 +866,26 @@ def _linprog_simplex(c, A_ub=None, b_ub=None, A_eq=None, b_eq=None,
                                   callback=callback, tol=tol, nit0=nit1,
                                   bland=bland)
 
-    solution = np.zeros(n+n_slack+n_artificial)
+    solution = np.zeros(n + n_slack + n_artificial)
+    
+    # Each variable in the index gets set to the value in the
+    # objective function.
+    
+    # Every basis variable gets the value of the equation left hand
+    # side.
+    
     solution[basis[:m]] = T[:m, -1]
+    
+    # solution - is the first n variables after basis assignment.
+    
     x = solution[:n]
+
     slack = solution[n:n+n_slack]
 
     # For those variables with finite negative lower bounds,
     # reverse the change of variables
     masked_L = np.ma.array(L, mask=np.isinf(L), fill_value=0.0).filled()
+
     x = x + masked_L
 
     # For those variables with infinite negative lower bounds,

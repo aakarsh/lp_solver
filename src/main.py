@@ -50,33 +50,46 @@ if __name__ =="__main__":
     (A,b,c,n,m) = Reader.parse()
 
 
-    print("-------------------- Tableau --------------------")
-    tableau = Tableau(A,b,c,n,m)
+    if debug:
+        print("-------------------- Tableau --------------------")
+    tableau = Tableau(A,b,c,n,m,debug)
     t_anst, t_ansx =  tableau.solve()
-    print("-------------------------------------------------")
-    
-    print("-------------------- Scipy --------------------")
-    scipy   = SciPy(A,b,c,n,m)
+    if debug:
+        print("-------------------------------------------------")
+
+    if debug:
+        print("-------------------- Scipy --------------------")
+    scipy   = SciPy(A,b,c,n,m,debug)
     
     l_anst, l_ansx = scipy.solve()
-    print("---------------------End:Scipy--------------------")
+    if debug:
+        print("---------------------End:Scipy--------------------")
 
-    # print("-------------------- Simplex --------------------")
-    # simplex = Simplex(A,b,c,n,m)
-    # anst, ansx = simplex.solve()
-    anst,ansx = None, [0]* n
-    # print("-----------------------------------------------")
+    if debug: print("-------------------- Simplex --------------------")
+    simplex = Simplex(A,b,c,n,m,debug)
+    anst, ansx = simplex.solve()
+    if debug: print("-----------------------------------------------")
+
+    if debug:
+        print("---------------------------------------------------------------")
+        solvers = [("Tableau", t_anst, list(map(float,t_ansx)) if t_ansx else None),
+                   ("Simplex",anst,list(map(float,ansx)) if ansx else None),
+                   ("Scipy",l_anst,l_ansx)]
+        for s in solvers:
+            print("%-15s | %15s | %4s " % s)
+        print("---------------------------------------------------------------")
+    
 
 
-    print(Simplex.answer_type_str(anst))
+    print(Simplex.answer_type_str(t_anst))
 
     if anst == 0:
-        print(' '.join(list( map( lambda x : '%.18f' % x, ansx))))
-        #simplex.verify_bounds(tolerance = global_tolerance)
-
+        print(' '.join(list( map( lambda x : '%.18f' % x, t_ansx))))
+        
+        # simplex.verify_bounds(tolerance = global_tolerance)
         # if args.verify:
         #     simplex.verify_scipy(tolerance = global_tolerance)
 
-    if args.scipy:
-        print(simplex.solve_scipy())
+    # if args.scipy:
+    #     print(simplex.solve_scipy())
 

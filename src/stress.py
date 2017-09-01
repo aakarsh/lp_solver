@@ -29,7 +29,7 @@ while True:
 
   print_lp(n,m,A,b,c,file = sys.stdout)
 
-  proc = subprocess.Popen(['./simplex.py'],
+  proc = subprocess.Popen(['./main.py'],
                           stdin = subprocess.PIPE,
                           stdout = subprocess.PIPE,
                           universal_newlines = True)

@@ -537,7 +537,7 @@ class SlackForm:
 
 class Simplex:
 
-    def __init__(self,A,b,c,n,m): # called here so modify in solve
+    def __init__(self,A,b,c,n,m,debug=False): # called here so modify in solve
         self.A = A
         self.b = b
         self.c = c
@@ -546,6 +546,7 @@ class Simplex:
         self.v = 0
         self.n = n
         self.m = m
+        self.debug  = debug
         self.fp_op = fp_ops(rel_tol=global_tolerance,abs_tol=global_tolerance)
 
 
@@ -565,19 +566,19 @@ class Simplex:
         aux_sf = SlackForm(simplex = aux_simplex)
         nvars = self.n + self.m
 
-        if debug:
+        if self.debug:
             print("%d => (dependent) => %d " % (nvars,min_idx))
         aux_sf.phase = 0
         aux_sf.pivot( self.n + self.m , min_idx,phase=0)
-        if debug: print("========== Search for Auxiliar Form ========== ")
+        if self.debug: print("========== Search for Auxiliar Form ========== ")
         (opt,ansx) = aux_sf.solve(phase=0)
-        if debug: print("========== End Search for Auxiliar Form ========== ")
+        if self.debug: print("========== End Search for Auxiliar Form ========== ")
 
         if not self.fp_op.iszero(opt):
-            if debug: print("Raising Infeasible %f %s" % (opt,self.fp_op.iszero(opt)))
+            if self.debug: print("Raising Infeasible %f %s" % (opt,self.fp_op.iszero(opt)))
             raise InfeasibleError()
 
-        if debug:
+        if self.debug:
             print("dependent : %s" % aux_sf.dependent)
 
         new_obj = SlackForm.Constraint(slackform.v, slackform.c, fp_op = self.fp_op)
@@ -587,8 +588,8 @@ class Simplex:
             entering_constraint = SlackForm.Constraint(constant,equation,fp_op = self.fp_op)
             new_obj = SlackForm.Constraint.substitute(new_obj,idx,entering_constraint)
 
-        # if debug: print("sub-obj: %s" % new_obj)
-        if debug: print("END:subsitite-auxiliary-form-objective ")
+        # if self.debug: print("sub-obj: %s" % new_obj)
+        if self.debug: print("END:subsitite-auxiliary-form-objective ")
 
         list_wrapper(new_obj.get_coefficients()).set_values( None, aux_sf.dependent)
         list_wrapper(aux_sf.b).set_values( None, aux_sf.independent )
@@ -598,7 +599,7 @@ class Simplex:
 
         # using new objective and return new slack form need to remove
         # x_nvars
-        if debug:
+        if self.debug:
             print("Objective: %s" % new_obj)
             print("A: \n%s" % aux_sf.A)
             print("b: \n%s" % Matrix.PrettyPrinter.format_list(aux_sf.b))
@@ -620,7 +621,7 @@ class Simplex:
         aux_sf.independent.remove(nvars)
         aux_sf.replace(m=len(aux_sf.independent)-1)
 
-        if debug:
+        if self.debug:
             print("objective: %s " % new_obj)
             print("A: \n%s" % aux_sf.A)
             print("b: \n%s" % Matrix.PrettyPrinter.format_list(aux_sf.b))
@@ -630,25 +631,25 @@ class Simplex:
         return aux_sf
 
     def solve(self): # phase used to track
-        if debug: print("\nSimplex solve");
+        if self.debug: print("\nSimplex solve");
         try:
-            if debug:
+            if self.debug:
                 print("simplex:b %s"%self.b)
 
             min_constant, idx = list_wrapper(self.b).min_index();
 
             #TODO : Error-Here
             if  self.fp_op.islt(min_constant , 0): # 0-comparison
-                if debug:
+                if self.debug:
                     print(" Currently not in basic form :%d - index %d " % (min_constant,idx))
 
                 simplex_basic_form = self.find_basic_feasible(idx)
 
                 try:
-                    if debug: print("-" * 100)
-                    if debug: print("========== Solve Transformed  basic form ========== ")
+                    if self.debug: print("-" * 100)
+                    if self.debug: print("========== Solve Transformed  basic form ========== ")
                     opt,ansx = simplex_basic_form.solve( phase = 1)
-                    if debug: print("========== End Transformed  basic form ========== ")
+                    if self.debug: print("========== End Transformed  basic form ========== ")
                     self.optimum = opt
                     self.assignment = ansx
                     ## slack variables are the first n varialbes
@@ -670,7 +671,7 @@ class Simplex:
                 self.assignment = ansx
                 del self.assignment[:self.n]
 
-            if debug:
+            if self.debug:
                 print("Optimimum Value: %f" % opt)
                 print("Assignment: %s "     % Matrix.PrettyPrinter.format_list(self.assignment))
 
@@ -688,7 +689,7 @@ class Simplex:
         # create copy of b and extend it for x_{nvars}
         #
         aux_b = self.b[:]
-        if debug:
+        if self.debug:
             print("make_auxiliary_form: b:\n%s\naux-b:\n%s" % (self.b,aux_b))
         #
         # set objective function: -x_{nvars}
@@ -742,7 +743,7 @@ class Simplex:
 
         linprog_res = self.solve_scipy()
 
-        if debug:
+        if self.debug:
             print("max_myprog = %f " % self.optimum)
             print ("linprog_res.status : %f " % linprog_res.status)
         if self.anst == 0:
@@ -750,7 +751,7 @@ class Simplex:
 
         max_ref = np.dot(simplex.c, linprog_res.x)
 
-        if debug:
+        if self.debug:
             print('max_ref = %f' % max_ref)
             print('tolerance = %f' % tolerance)
             print("delta= %f " % abs(self.fp_op.sub(simplex.optimum , max_ref)))
