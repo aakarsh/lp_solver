@@ -83,7 +83,7 @@ if __name__ =="__main__":
 
     print(Simplex.answer_type_str(t_anst))
 
-    if anst == 0:
+    if t_anst == 0:
         print(' '.join(list( map( lambda x : '%.18f' % x, t_ansx))))
         
         # simplex.verify_bounds(tolerance = global_tolerance)
