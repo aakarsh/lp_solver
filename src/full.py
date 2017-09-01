@@ -384,7 +384,7 @@ import decimal
 from decimal import Decimal
 from itertools import chain
 
-#from matrix import *
+# from matrix import *
 
 # TODO: Remove unecessary features in order to keep it simple
 # TODO : Write tests for Infeasible and Unbounded solutions, other stuff here.
