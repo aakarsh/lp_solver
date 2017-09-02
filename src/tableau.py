@@ -150,7 +150,7 @@ class Tableau:
         skip_rows = 2 if (phase == 1) else 1
 
         # Mask values less than tolerance
-        ignored = lambda e: (e is None) or ( e <= tol )
+        ignored = lambda e: (e is None) or ( e <= -tol )
 
         # print(">> T\n %s"%T)
         # print(">> T[:-skip_rows,pivcol] : \n %s",T[:-skip_rows,pivcol])
@@ -241,7 +241,9 @@ class Tableau:
                 
                 pivcols = filter(non_zero_col,range(ncols -1))
 
-                if len(pivcols) == 0: continue
+                if len(pivcols) == 0:
+                    continue
+                
                 self.do_pivot(T,pivrow,pivcols[0],basis,phase)
 
         complete = False
@@ -311,7 +313,7 @@ class Tableau:
 
         if status == 2: # infeasible solution
             return (-1,None)
-            # raise InfeasibleError()
+
 
         # Move to phase 2 compuation
         status, complete = self.simplex_solve(self.T,self.n,self.basis,phase = 2)

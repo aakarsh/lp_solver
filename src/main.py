@@ -54,30 +54,28 @@ if __name__ =="__main__":
         print("-------------------- Tableau --------------------")
     tableau = Tableau(A,b,c,n,m,debug)
     t_anst, t_ansx =  tableau.solve()
-    if debug:
-        print("-------------------------------------------------")
 
-    if debug:
-        print("-------------------- Scipy --------------------")
-        
-    scipy = SciPy(A,b,c,n,m,debug)    
-    l_anst, l_ansx = scipy.solve()
-    if debug:
-        print("---------------------End:Scipy--------------------")
+    compare = False
+    if compare:
+        if debug: print("-------------------------------------------------")
+        if debug: print("-------------------- Scipy --------------------")        
+        scipy = SciPy(A,b,c,n,m,debug)    
+        l_anst, l_ansx = scipy.solve()
+        if debug: print("---------------------End:Scipy--------------------")
 
-    if debug: print("-------------------- Simplex --------------------")
-    simplex = Simplex(A,b,c,n,m,debug)
-    anst, ansx = simplex.solve()
-    if debug: print("-----------------------------------------------")
+        if debug: print("-------------------- Simplex --------------------")
+        simplex = Simplex(A,b,c,n,m,debug)
+        anst, ansx = simplex.solve()
+        if debug: print("-----------------------------------------------")
 
-    if debug:
-        print("---------------------------------------------------------------")
-        solvers = [("Tableau", t_anst, list(map(float,t_ansx)) if t_ansx else None),
-                   ("Simplex",anst,list(map(float,ansx)) if ansx else None),
-                   ("Scipy",l_anst,l_ansx)]
-        for s in solvers:
-            print("%-15s | %15s | %4s " % s)
-        print("---------------------------------------------------------------")
+        if debug:
+            print("---------------------------------------------------------------")
+            solvers = [("Tableau", t_anst, list(map(float,t_ansx)) if t_ansx else None),
+                       ("Simplex",anst,list(map(float,ansx)) if ansx else None),
+                       ("Scipy",l_anst,l_ansx)]
+            for s in solvers:
+                print("%-15s | %15s | %4s " % s)
+            print("---------------------------------------------------------------")
     
 
     def answer_type_str(anst):
