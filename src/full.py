@@ -600,6 +600,9 @@ class Tableau:
 
             # Check basis for artificial variables
             variables = list(filter(is_artificial,range(len(basis))))
+            
+            if len(variables) > 0 :
+                raise AssertionError("Found artificial variables : %s " % variables)
 
             if self.debug:
                 print("basic variables : %s\n" % basis)
