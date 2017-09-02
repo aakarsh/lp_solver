@@ -594,12 +594,16 @@ class Tableau:
         # Identify and substitute
         if phase == 2:
 
-            # Identify aritificial variables still in the objective
+            # Identify aritificial variables still in the objectivexo
             ncols = T.shape()[1]
             is_artificial = lambda idx : basis[idx] > ncols - 2
 
             # Check basis for artificial variables
             variables = list(filter(is_artificial,range(len(basis))))
+            
+            # 9/1/2017 10:52 pm : we need to pivot out the artificial
+            # variables here we need to pivot out the aritificial
+            # variables but I don't.
             
             if len(variables) > 0 :
                 raise AssertionError("Found artificial variables : %s " % variables)

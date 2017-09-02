@@ -59,8 +59,8 @@ if __name__ =="__main__":
 
     if debug:
         print("-------------------- Scipy --------------------")
-    scipy   = SciPy(A,b,c,n,m,debug)
-    
+        
+    scipy = SciPy(A,b,c,n,m,debug)    
     l_anst, l_ansx = scipy.solve()
     if debug:
         print("---------------------End:Scipy--------------------")
@@ -80,8 +80,13 @@ if __name__ =="__main__":
         print("---------------------------------------------------------------")
     
 
+    def answer_type_str(anst):
+        try:
+            return ["No solution","Bounded solution","Infinity"][anst+1]
+        except :
+            return "Unrecognized Answer : %s" % anst
 
-    print(Simplex.answer_type_str(t_anst))
+    print(answer_type_str(t_anst))
 
     if t_anst == 0:
         print(' '.join(list( map( lambda x : '%.18f' % x, t_ansx))))

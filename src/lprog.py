@@ -364,22 +364,54 @@ def _solve_simplex(T, n, basis, maxiter=1000, phase=2, callback=None,
         # This takes into account the deletions that happened before.
         artificial_variables = [row for row in range(basis.size)
                                 if basis[row] > T.shape[1] - 2]
+        
+        # if debug:
+        #     print("artificial_variables : %s" % artificial_variables )
+            
+        # TODO understand what this is doing ....
 
-        #print("Artificial Variables : %s" % artificial_variables)
+        # Ok I am out of it am - back at 8:25
+        
+        for pivrow in artificial_variables:
 
-        for pivrow in  artificial_variables:
-            non_zero_row = [col for col in range(T.shape[1] - 1)
-                            if T[pivrow, col] != 0]
-            if len(non_zero_row) > 0:
+            # iterate through the artificial variables added for
+            # phase-1 Find a non-zero column in row with artifical
+            # variable.
+
+            non_zero_row = [ col for col in range(T.shape[1] - 1)
+                             if T[pivrow, col] != 0 ]
+
+            # As long as there is at least one non-zero column
+            
+            if len(non_zero_row) > 0 :
+                
+                # Find the pivot column 
                 pivcol = non_zero_row[0]
+
                 # variable represented by pivcol enters
                 # variable in basis[pivrow] leaves
+
+                # switch basis set the basis as pivrow
                 basis[pivrow] = pivcol
+
+                # pivot value as pivrow and pivcol
+                
                 pivval = T[pivrow][pivcol]
+                
                 T[pivrow, :] = T[pivrow, :] / pivval
+
+                # basically for : (irow,pivcol)
+                # pick the in range of number of rows
+                
                 for irow in range(T.shape[0]):
-                    if irow != pivrow:
-                        T[irow, :] = T[irow, :] - T[pivrow, :]*T[irow, pivcol]
+                    # irow is not pivrow
+                    if irow != pivrow :
+                        # subtract all rows but the pivot row by multiply
+                        T[irow, :] = T[irow, :] - T[pivrow, :] * T[irow, pivcol]
+                        
+                # increase the number of iterations counting the
+                # iterations required
+                
                 nit += 1
 
     # what is the above code doing ??
@@ -394,6 +426,7 @@ def _solve_simplex(T, n, basis, maxiter=1000, phase=2, callback=None,
     while not complete:
         # Find the pivot column
         pivcol_found, pivcol = _pivot_col(T, tol, bland)
+        
         if not pivcol_found:
             pivcol = np.nan
             pivrow = np.nan
@@ -402,8 +435,9 @@ def _solve_simplex(T, n, basis, maxiter=1000, phase=2, callback=None,
         else:
             # Find the pivot row
             pivrow_found, pivrow = _pivot_row(T, pivcol, phase, tol)
+
             if not pivrow_found:
-                # unbounded solution
+                # unbounded-solution
                 status = 3
                 complete = True
 
@@ -418,7 +452,6 @@ def _solve_simplex(T, n, basis, maxiter=1000, phase=2, callback=None,
                                       "pivot":(pivrow, pivcol),
                                       "basis":basis,
                                       "complete": complete and phase == 2})
-
         if not complete:
             if nit >= maxiter:
                 # Iteration limit exceeded
@@ -426,14 +459,19 @@ def _solve_simplex(T, n, basis, maxiter=1000, phase=2, callback=None,
                 status = 1
                 complete = True
             else:
+                
                 # variable represented by pivcol enters
                 # variable in basis[pivrow] leaves
+                
                 basis[pivrow] = pivcol
                 pivval = T[pivrow][pivcol]
                 T[pivrow, :] = T[pivrow, :] / pivval
+                
+                # irow - 
                 for irow in range(T.shape[0]):
                     if irow != pivrow:
-                        T[irow, :] = T[irow, :] - T[pivrow, :]*T[irow, pivcol]
+                        T[irow, :] = T[irow, :] - T[pivrow, :] * T[irow, pivcol]
+                        
                 nit += 1
 
     return nit, status
@@ -777,11 +815,11 @@ def _linprog_simplex(c, A_ub=None, b_ub=None, A_eq=None, b_eq=None,
 
     # All the upper bound constraints are added after the equality
     # constraints. Starting with last equality constraint and going
-    # till the n'th column. 
+    # till the n'th column.
     #
     # For every slack variable in an upper-bound constraint add
     # variable by appending a diagonal matrix D of dimensions (m-meq)* (n_slack)
-    # 
+    #
 
     if mub > 0:
         # Add Aub to the tableau
@@ -799,9 +837,9 @@ def _linprog_simplex(c, A_ub=None, b_ub=None, A_eq=None, b_eq=None,
     slcount = 0
     avcount = 0
     basis = np.zeros(m, dtype=int)
-    
+
     r_artificial = np.zeros(n_artificial, dtype=int)
-    
+
     for i in range(m):
         if i < meq or b[i] < 0:
             # Basic variable i is in column n+n_slack+avcount
@@ -832,7 +870,7 @@ def _linprog_simplex(c, A_ub=None, b_ub=None, A_eq=None, b_eq=None,
         print("Basis : %s " % basis)
         print("Artificial : %s " % r_artificial)
 
-        rows,cols = T.shape        
+        rows,cols = T.shape
         for i in range(rows):
             for j in range(cols):
                 print(" %+3.2f "%T[i,j],end='')
@@ -867,17 +905,17 @@ def _linprog_simplex(c, A_ub=None, b_ub=None, A_eq=None, b_eq=None,
                                   bland=bland)
 
     solution = np.zeros(n + n_slack + n_artificial)
-    
+
     # Each variable in the index gets set to the value in the
     # objective function.
-    
+
     # Every basis variable gets the value of the equation left hand
     # side.
-    
+
     solution[basis[:m]] = T[:m, -1]
-    
+
     # solution - is the first n variables after basis assignment.
-    
+
     x = solution[:n]
 
     slack = solution[n:n+n_slack]

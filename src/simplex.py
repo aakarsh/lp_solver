@@ -550,12 +550,7 @@ class Simplex:
         self.fp_op = fp_ops(rel_tol=global_tolerance,abs_tol=global_tolerance)
 
 
-    @staticmethod
-    def answer_type_str(anst):
-        try:
-            return ["No solution","Bounded solution","Infinity"][anst+1]
-        except :
-            return "Unrecognized Answer : %s" % anst
+
 
 
     def find_basic_feasible(self, min_idx):

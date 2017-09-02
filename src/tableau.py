@@ -92,9 +92,11 @@ class Tableau:
         artificial = [0] * self.n_artificial
 
         for i in range(m) :
-            # Negative constant need to Introduce a artificial variables
+            # negative constant need to introduce a artificial variables
+            # maybe this comparison is not safe.
             if self.T[i,-1] < 0 :
-                # Namespace of artificial variables starts just beyond
+                # namespace of artificial variables starts just beyond
+                
                 self.basis[i] = n + self.n_slack + avcount
                 artificial[avcount] = i
 
@@ -215,7 +217,7 @@ class Tableau:
 
         solution = [0] * self.nvars
 
-        max_iterations = 500
+        max_iterations = 5000
         nit = 0
 
         # Identify and substitute
@@ -223,17 +225,20 @@ class Tableau:
 
             # Identify aritificial variables still in the objective
             ncols = T.shape()[1]
-            is_artificial = lambda idx : basis[idx] > ncols - 2
+            is_artificial = lambda idx : basis[idx] > (ncols - 2)
 
             # Check basis for artificial variables
-            variables = list(filter(is_artificial,range(len(basis))))
+            artificial_variables = list(filter(is_artificial, range(len(basis))))
 
             if self.debug:
-                print("basic variables : %s\n" % basis)
-                print("artificial pivot variables : %s " % variables)
+                print("basic variables : %s \n" % self.basis)
+                print("artificial pivot variables : %s " % artificial_variables)
 
-            for pivrow in variables:
-                non_zero_col = lambda col: self.T[pivrow,col] != 0
+            # This should pivot out all the artificial variables
+            for pivrow in artificial_variables:
+                def non_zero_col(col):
+                    return self.T[pivrow,col] != 0
+                
                 pivcols = filter(non_zero_col,range(ncols -1))
 
                 if len(pivcols) == 0: continue
