@@ -49,7 +49,6 @@ if __name__ =="__main__":
 
     (A,b,c,n,m) = Reader.parse()
 
-
     if debug:
         print("-------------------- Tableau --------------------")
     tableau = Tableau(A,b,c,n,m,debug)

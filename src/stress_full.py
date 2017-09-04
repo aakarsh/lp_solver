@@ -30,7 +30,7 @@ while True:
   print_lp(n,m,A,b,c,file = sys.stdout)
 
   proc = subprocess.Popen(['./full.py3'],
-                          stdin = subprocess.PIPE,
+                          stdin  = subprocess.PIPE,
                           stdout = subprocess.PIPE,
                           universal_newlines = True)
   

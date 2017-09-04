@@ -11,9 +11,12 @@ from scipy import optimize
 import subprocess
 
 def print_lp(n,m,A,b,c,file=sys.stdout):
+  
   print(n, m,file=file)
+  
   for i in range(n):
     print(*(A[i][j] for j in range(m)), file=file)
+    
   print(*b,file=file)
   print(*c,file=file)
   print(file=file)

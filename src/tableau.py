@@ -128,17 +128,20 @@ class Tableau:
             print(self.T)
 
 
-    def pivot_column(self,T,tol=global_tolerance):
-        """Go through the objective row and find the minimum entry above
-           tolerance"""
+    def pivot_column(self,T,tol=global_tolerance):        
+        """Go through the objective row and find the minimum entry
+           above tolerance"""
+        
         # Ignore all positive values where: positive is defined as
         # anything greater than -tol
         ignored = lambda e: (e is None) or (e >= -tol)
 
         objective = T[-1,:-1].masked_where(ignored)
         idx =  objective.min_index()
+        
         if self.debug:
             print("pivot-column:%s index : %s\n" % (T[-1,:-1], idx[1]))
+            
         return idx
 
 

@@ -15,6 +15,17 @@ debug = False
 global_tolerance = 1e-12
 decimal.getcontext().prec = 64
 
+def map_optional(func,ls):
+    "Maps of the list skipping over but preserving None objects "
+    if ls is None: return None    
+    result =[]
+    for l in ls:
+        if l:
+            result.append(func(l))
+        else:
+            result.append(None)
+    return result
+
 class Matrix:
 
     "Simplistic matrix class."

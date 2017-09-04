@@ -20,7 +20,6 @@ class InfeasibleError(Exception):
     "Raised when the solution for given equations is infeasible(has no-solution)."
     pass
 
-
 class fp_ops:
 
     def __init__(self,rel_tol=global_tolerance, abs_tol=global_tolerance):
@@ -48,16 +47,16 @@ class fp_ops:
         return Decimal(0.0) if abs(Decimal(a) - Decimal(0.0)) <= Decimal(global_tolerance) else Decimal(a)
 
     def add(self, a, b):
-        return self.round(a)+self.round(b)
+        return self.round(a) + self.round(b)
 
     def sub(self, a, b):
-        return self.round(a)-self.round(b)
+        return self.round(a) - self.round(b)
 
     def mul(self, a, b):
-        return self.round(a)*self.round(b)
+        return self.round(a) * self.round(b)
 
     def div(self, a, b):
-        return self.round(a)/self.round(b)
+        return self.round(a) / self.round(b)
 
 class SlackForm:
     "Represents simplex in slack form ..."
@@ -548,10 +547,6 @@ class Simplex:
         self.m = m
         self.debug  = debug
         self.fp_op = fp_ops(rel_tol=global_tolerance,abs_tol=global_tolerance)
-
-
-
-
 
     def find_basic_feasible(self, min_idx):
         "Find basic feasible solution."
