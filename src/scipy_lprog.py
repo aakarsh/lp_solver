@@ -24,8 +24,8 @@ class SciPy:
         self.m = m
         self.debug = debug
 
-    def solve(self,tolerance = global_tolerance):
-
+    def solve(self, tolerance = global_tolerance):
+        
         linprog_res = lprog.linprog([ -x for x in self.c ],
                                     A_ub = self.A,
                                     b_ub = self.b,

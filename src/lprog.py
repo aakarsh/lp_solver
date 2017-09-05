@@ -880,6 +880,8 @@ def _linprog_simplex(c, A_ub=None, b_ub=None, A_eq=None, b_eq=None,
     nit1, status = _solve_simplex(T, n, basis, phase=1, callback=callback,
                                   maxiter=maxiter, tol=tol, bland=bland)
 
+    if debug:
+        print("Pseudo-objective :%s, %s "% (abs(T[-1,-1]),tol))
     # if pseudo objective is zero, remove the last row from the tableau and
     # proceed to phase 2
     if abs(T[-1, -1]) < tol:

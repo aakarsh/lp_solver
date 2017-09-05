@@ -12,7 +12,7 @@ from decimal import Decimal
 from itertools import chain
 
 debug = False
-global_tolerance = 1e-9
+global_tolerance = 1e-20
 decimal.getcontext().prec = 64
 
 def map_optional(func,ls):
@@ -684,15 +684,15 @@ class Tableau:
         return (status, complete)
 
 
-    def solve(self):
+    def solve(self,tolerance = global_tolerance):
         # Pivot to basic flexible.
 
-        status, complete = self.simplex_solve(self.T,self.n,self.basis,phase=1)
+        status, complete = self.simplex_solve(self.T,self.n,self.basis,phase=1,tol=tolerance)
         pseudo_objective  = self.T[-1,-1]
         if self.debug:
-            print("pseudo-objecive : %d " % pseudo_objective)
+            print("Pseudo-objecive : %s < tolerance %s " % (pseudo_objective,tolerance))
 
-        if abs(pseudo_objective) < global_tolerance:
+        if abs(pseudo_objective) < tolerance:
 
             # remove pseudo-objective row
             self.T.del_rows([len(self.T)-1])
@@ -703,7 +703,7 @@ class Tableau:
         else: # Infeasible without starting point
             status = 2
             if self.debug:
-                print("pseudo_objective(%d) < global_tolerance(%d)" % (pseudo_objective,global_tolerance))
+                print("pseudo_objective(%d) < global_tolerance(%d)" % (pseudo_objective,tolerance))
                 print("Infeasible soltion")
 
         if status == 2: # infeasible solution

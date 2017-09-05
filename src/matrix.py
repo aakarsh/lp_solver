@@ -12,7 +12,7 @@ from decimal import Decimal
 from itertools import chain
 
 debug = False
-global_tolerance = 1e-9
+global_tolerance = 1e-20
 decimal.getcontext().prec = 64
 
 def map_optional(func,ls):

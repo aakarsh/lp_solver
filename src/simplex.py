@@ -732,7 +732,7 @@ class Simplex:
         return linprog_res
 
 
-    def verify_scipy(self,tolerance=1e-3):
+    def verify_scipy(self,tolerance=global_tolerance):
         import sys
         import numpy as np
         from scipy.optimize import linprog
