@@ -96,7 +96,7 @@ class Tableau:
             # maybe this comparison is not safe.
             if self.T[i,-1] < 0 :
                 # namespace of artificial variables starts just beyond
-                
+
                 self.basis[i] = n + self.n_slack + avcount
                 artificial[avcount] = i
 
@@ -128,20 +128,20 @@ class Tableau:
             print(self.T)
 
 
-    def pivot_column(self,T,tol=global_tolerance):        
+    def pivot_column(self,T,tol=global_tolerance):
         """Go through the objective row and find the minimum entry
            above tolerance"""
-        
+
         # Ignore all positive values where: positive is defined as
         # anything greater than -tol
         ignored = lambda e: (e is None) or (e >= -tol)
 
         objective = T[-1,:-1].masked_where(ignored)
-        idx =  objective.min_index()
-        
+        idx =  objective.old_min_index(tol)
+
         if self.debug:
             print("pivot-column:%s index : %s\n" % (T[-1,:-1], idx[1]))
-            
+
         return idx
 
 
@@ -172,8 +172,9 @@ class Tableau:
         q = mb / ma
         if self.debug:
             print("q: %s" % q)
+
         # this call is not trivial or obvious
-        return q.min_index()
+        return q.old_min_index(tol)
 
 
     def do_pivot(self, T, pivrow, pivcol, basis, phase):
@@ -203,7 +204,7 @@ class Tableau:
 
         # When called in phase-2 we are presented with both the original and the pseudo
         # objective function. Thus we must ignore the last two rows.
-        
+
         if self.debug:
             print("simplex_solve phase: %d" % phase)
             print("T:")
@@ -229,6 +230,7 @@ class Tableau:
 
             # Identify aritificial variables still in the objective
             ncols = T.shape()[1]
+            
             is_artificial = lambda idx : basis[idx] > (ncols - 2)
 
             # Check basis for artificial variables
@@ -240,9 +242,10 @@ class Tableau:
 
             # This should pivot out all the artificial variables
             for pivrow in artificial_variables:
+                
                 def non_zero_col(col):
                     return self.T[pivrow,col] != 0
-                
+
                 pivcols = filter(non_zero_col,range(ncols -1))
 
                 if len(pivcols) == 0:
@@ -261,20 +264,27 @@ class Tableau:
                 print("T:")
                 print(T)
 
-            if not pivcol_found:  # Finished with all the columns, in basic form
+            if  pivcol_found is None or pivcol_found is False:  # Finished with all the columns, in basic form
+                if self.debug:
+                    print("No Pivot Column Found !")
                 status, complete = 0, True
                 break
 
             pivrow_found, pivrow = self.pivot_row(T,pivcol,tol,phase=phase)
 
-            if not pivrow_found: # not finding the pivot row is very serious.
+            if debug:
+                print("pivrow_found %s, pivot_row %s" % (pivrow_found,pivrow))
+            
+            if  pivrow_found is None or pivrow_found is False: # not finding the pivot row is very serious.
                 if self.debug:
-                    print("cound not find pivot row")
+                    print("No Pivot Row Found")
                 # Unbounded
                 status, complete = 3, True
                 break
+            
             if self.debug:
-                print("pivot: (pivrow,pivcol): (%d,%d)" %(pivrow,pivcol))
+                print("Pivot Element: T[%d, %d]" % (pivrow,pivcol))
+
 
             if not complete: # perform the pivot on pivot entry
                 self.do_pivot(T,pivrow,pivcol, basis,phase)
@@ -295,7 +305,7 @@ class Tableau:
 
     def solve(self):
         # Pivot to basic flexible.
-        
+
         status, complete = self.simplex_solve(self.T,self.n,self.basis,phase=1)
         pseudo_objective  = self.T[-1,-1]
         if self.debug:
@@ -309,10 +319,10 @@ class Tableau:
             # Remove artificial variable columns
             self.T.del_columns(range(self.n + self.n_slack,
                                      self.n + self.n_slack + self.n_artificial))
-        else:
-            # Infeasible without starting point
+        else: # Infeasible without starting point
             status = 2
             if self.debug:
+                print("pseudo_objective(%d) < global_tolerance(%d)" % (pseudo_objective,global_tolerance))
                 print("Infeasible soltion")
 
         if status == 2: # infeasible solution
@@ -322,9 +332,9 @@ class Tableau:
         # Move to phase 2 compuation
         status, complete = self.simplex_solve(self.T,self.n,self.basis,phase = 2)
 
-        if status == 0:                
+        if status == 0:
             solution = list_wrapper([0] * (self.n + self.n_slack + self.n_artificial))
-            
+
             if self.debug:
                 print(" m: %d, n: %d"  %  (self.m, self.n))
                 print(" basis: %s"     %   self.basis[:self.m])
@@ -341,7 +351,7 @@ class Tableau:
 
             obj,ansx = -self.T[-1,-1], solution
             return (0,ansx)
-        
+
         elif status == 3:
             return (1,None)
         else:

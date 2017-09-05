@@ -12,7 +12,7 @@ from decimal import Decimal
 from itertools import chain
 
 debug = False
-global_tolerance = 1e-4
+global_tolerance = 1e-9
 decimal.getcontext().prec = 64
 
 def map_optional(func,ls):
@@ -364,7 +364,29 @@ class list_wrapper():
         for idx in idxs: l[idx] = value
 
 
+    def old_min_index(ls,max=float('inf'),custom_min=min,tol=global_tolerance):
+        """Return a pair of (value,index) of elment with minimum index. Assume
+        relavant values less than tolerance have already been masked"""
+        idx = 0
+        min_idx,min_value = None,None
+        
+        for elem in ls:
 
+                
+            if (min_value is None) and (min_idx is None) and \
+               not (elem is None) :
+                min_idx = idx
+                min_value = elem
+                
+            if (elem is not None ) and \
+               (not (min_value is None) and (Decimal(min_value) - Decimal(elem)  >= -Decimal(tol))):
+                min_value = elem
+                min_idx   = idx
+                
+            idx+=1
+            
+        return (min_value,min_idx) if ((not min_value is None ) ) else (None,None)
+    
         # zl = zip(l,range(len(l)))
         # # hiding a comparison
         # return custom_min(zl, key = lambda z: z[0] if z[0] else max)

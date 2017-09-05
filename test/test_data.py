@@ -16,6 +16,8 @@ import simplex
 import scipy_lprog
 import main
 
+debug=True
+
 class TestDataRunner(unittest.TestCase):
 
     test_directory =  "/home/aakarsh/src/MOOC/coursera/lp_solver/test_data"
@@ -49,7 +51,7 @@ class TestDataRunner(unittest.TestCase):
         ignore = lambda fname: not fname.endswith(".a")
         test_dirs  = [ p % TestDataRunner.test_directory for p in patterns ]
         test_files = self.flatten([filter(ignore,glob.iglob(d)) for d in test_dirs])
-        debug=False
+        debug=True
 
         failures_by_file = {}
         
@@ -57,15 +59,23 @@ class TestDataRunner(unittest.TestCase):
             
             (A,b,c,n,m) = main.Reader.parse(file=tf)
             
-            algorithms  = {"Tableau" : tableau.Tableau(A,b,c,n,m,debug),
-                           #"Simplex" : simplex.Simplex(A,b,c,n,m,debug),
-                           "Scipy"   : scipy_lprog.SciPy(A,b,c,n,m,debug)}
+            algorithms  = {"Tableau" : tableau.Tableau(A,b,c,n,m,debug=False),
+                           # some reason simplex stops workign with new min index
+                           #"Simplex" : simplex.Simplex(A,b,c,n,m,debug=False),
+                           "Scipy"   : scipy_lprog.SciPy(A,b,c,n,m,debug=False)}
             results  = {}
             anst,ansx = None,None
             failed = False
 
             for (name,algo) in algorithms.items():
-                results[name] = algo.solve()
+                try:
+                    results[name] = algo.solve()
+                except Exception as e:
+                    print(tf)
+                    import traceback
+                    traceback.print_exc()
+                        
+                    #traceback.print_exception(Exception,e, sys.last_traceback)
 
                 if anst is None and ansx is None:
                     anst,ansx = results[name]
@@ -81,6 +91,7 @@ class TestDataRunner(unittest.TestCase):
 
         for (tf,results) in failures_by_file.items():
             tf_dir,tf_file = tf.split(os.path.sep)[-2:]
+            
             print("%s/%s:" %(tf_dir,tf_file))
                     
             for key in results.keys():

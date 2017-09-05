@@ -133,7 +133,7 @@ class SlackForm:
         # anything greater than -tol
         ignored = lambda e: (e is None) or (e >= -tol)
         objective = T[-1,:-1].masked_where(ignored)
-        return objective.min_index()
+        return objective.old_min_index()
 
 
     def _pivot_row(self,T,pivcol,tol,phase=1):
@@ -155,7 +155,7 @@ class SlackForm:
         mr = mb / ma
         print("mr: %s" % mr)
 
-        return mr.min_index()
+        return mr.old_min_index()
 
 
     def _simplex_solve(self, T, n, basis, phase =2, tol = global_tolerance):
@@ -316,7 +316,7 @@ class SlackForm:
             print("dependent : %s, independent : %s" % (self.independent,self.dependent))
 
         # TODO - do explicit comparisons
-        leaving_coeff,leaving_idx = list_wrapper(self.b).min_index()
+        leaving_coeff,leaving_idx = list_wrapper(self.b).old_min_index()
 
         if debug:
             print("leaving_coeff:%d leaving_idx: %d" % (leaving_coeff,leaving_idx))
@@ -460,7 +460,7 @@ class SlackForm:
         # if debug: print("b %s" % [self.b[idx] for idx in self.dependent])
 
         #TODO : Perform explicit Comparisons Instead
-        min_slack,slack_idx = list_wrapper(slack).min_index()
+        min_slack,slack_idx = list_wrapper(slack).old_min_index()
 
         if debug:
             if min_slack:
@@ -626,7 +626,7 @@ class Simplex:
             if self.debug:
                 print("simplex:b %s"%self.b)
 
-            min_constant, idx = list_wrapper(self.b).min_index();
+            min_constant, idx = list_wrapper(self.b).old_min_index();
 
             #TODO : Error-Here
             if  self.fp_op.islt(min_constant , 0): # 0-comparison
@@ -655,15 +655,21 @@ class Simplex:
 
             # basic solution is already feasible
             opt,ansx = None,None
+
             if self.fp_op.ispositive(min_constant): # basic form already in feasible form
                 opt,ansx = SlackForm(simplex=self).solve(phase=2)
                 self.optimum = opt
                 self.assignment = ansx
                 del self.assignment[:self.n]
+            else:
+                self.assignment = None
+                opt=None
 
             if self.debug:
-                print("Optimimum Value: %f" % opt)
-                print("Assignment: %s "     % Matrix.PrettyPrinter.format_list(self.assignment))
+                if not opt is None:
+                    print("Optimimum Value: %f" % opt)
+                if not self.assignment is None:
+                    print("Assignment: %s "     % Matrix.PrettyPrinter.format_list(self.assignment))
 
             return (0,self.assignment)
         except UnboundedError as err:

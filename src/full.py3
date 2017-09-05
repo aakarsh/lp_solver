@@ -12,7 +12,7 @@ from decimal import Decimal
 from itertools import chain
 
 debug = False
-global_tolerance = 1e-4
+global_tolerance = 1e-9
 decimal.getcontext().prec = 64
 
 def map_optional(func,ls):
@@ -274,24 +274,18 @@ class list_wrapper():
         m = None
         min_idx = None
         found = False
-
         for elem in self.ls:
-
             if elem is None:
                 idx += 1
                 continue
-
             if m is None:
                 m = elem
                 min_idx = idx
-
-            if m > elem:
+            if m > elem: #TODO cautios about this comaprison
                 found=True
                 m = elem
                 min_idx  = idx
-
-            idx += 1
-            
+            idx += 1            
         return (found,min_idx)
 
     def apply_op(self,value,operator):
@@ -369,18 +363,30 @@ class list_wrapper():
     def set_values(l, value,idxs ):
         for idx in idxs: l[idx] = value
 
-    # def min_index(l,max=float('inf'),custom_min=min):
-    #     "Return a pair of (value,index) of elment with minimum index"
-    #     print("min index 2")
-    #     idx = 0
-    #     min_idx,min_value = None,None
-    #     for c_v in l:
-    #         if c_v is not None and abs(c_v) >= global_tolerance and  ((min_value is None) or (min_value-c_v  >= global_tolerance)):
-    #             min_value = c_v
-    #             min_idx   = idx
-    #         idx+=1
-    #     return (min_value,min_idx) if ((not min_value is None ) ) else (None,None)
 
+    def old_min_index(ls,max=float('inf'),custom_min=min,tol=global_tolerance):
+        """Return a pair of (value,index) of elment with minimum index. Assume
+        relavant values less than tolerance have already been masked"""
+        idx = 0
+        min_idx,min_value = None,None
+        
+        for elem in ls:
+
+                
+            if (min_value is None) and (min_idx is None) and \
+               not (elem is None) :
+                min_idx = idx
+                min_value = elem
+                
+            if (elem is not None ) and \
+               (not (min_value is None) and (Decimal(min_value) - Decimal(elem)  >= -Decimal(tol))):
+                min_value = elem
+                min_idx   = idx
+                
+            idx+=1
+            
+        return (min_value,min_idx) if ((not min_value is None ) ) else (None,None)
+    
         # zl = zip(l,range(len(l)))
         # # hiding a comparison
         # return custom_min(zl, key = lambda z: z[0] if z[0] else max)
@@ -471,7 +477,7 @@ class Tableau:
             # maybe this comparison is not safe.
             if self.T[i,-1] < 0 :
                 # namespace of artificial variables starts just beyond
-                
+
                 self.basis[i] = n + self.n_slack + avcount
                 artificial[avcount] = i
 
@@ -503,20 +509,20 @@ class Tableau:
             print(self.T)
 
 
-    def pivot_column(self,T,tol=global_tolerance):        
+    def pivot_column(self,T,tol=global_tolerance):
         """Go through the objective row and find the minimum entry
            above tolerance"""
-        
+
         # Ignore all positive values where: positive is defined as
         # anything greater than -tol
         ignored = lambda e: (e is None) or (e >= -tol)
 
         objective = T[-1,:-1].masked_where(ignored)
-        idx =  objective.min_index()
-        
+        idx =  objective.old_min_index(tol)
+
         if self.debug:
             print("pivot-column:%s index : %s\n" % (T[-1,:-1], idx[1]))
-            
+
         return idx
 
 
@@ -547,7 +553,9 @@ class Tableau:
         q = mb / ma
         if self.debug:
             print("q: %s" % q)
-        return q.min_index()
+
+        # this call is not trivial or obvious
+        return q.old_min_index(tol)
 
 
     def do_pivot(self, T, pivrow, pivcol, basis, phase):
@@ -577,7 +585,7 @@ class Tableau:
 
         # When called in phase-2 we are presented with both the original and the pseudo
         # objective function. Thus we must ignore the last two rows.
-        
+
         if self.debug:
             print("simplex_solve phase: %d" % phase)
             print("T:")
@@ -603,6 +611,7 @@ class Tableau:
 
             # Identify aritificial variables still in the objective
             ncols = T.shape()[1]
+            
             is_artificial = lambda idx : basis[idx] > (ncols - 2)
 
             # Check basis for artificial variables
@@ -614,9 +623,10 @@ class Tableau:
 
             # This should pivot out all the artificial variables
             for pivrow in artificial_variables:
+                
                 def non_zero_col(col):
                     return self.T[pivrow,col] != 0
-                
+
                 pivcols = filter(non_zero_col,range(ncols -1))
 
                 if len(pivcols) == 0:
@@ -635,20 +645,27 @@ class Tableau:
                 print("T:")
                 print(T)
 
-            if not pivcol_found:  # Finished with all the columns, in basic form
+            if  pivcol_found is None or pivcol_found is False:  # Finished with all the columns, in basic form
+                if self.debug:
+                    print("No Pivot Column Found !")
                 status, complete = 0, True
                 break
 
             pivrow_found, pivrow = self.pivot_row(T,pivcol,tol,phase=phase)
 
-            if not pivrow_found: # not finding the pivot row is very serious.
+            if debug:
+                print("pivrow_found %s, pivot_row %s" % (pivrow_found,pivrow))
+            
+            if  pivrow_found is None or pivrow_found is False: # not finding the pivot row is very serious.
                 if self.debug:
-                    print("cound not find pivot row")
+                    print("No Pivot Row Found")
                 # Unbounded
                 status, complete = 3, True
                 break
+            
             if self.debug:
-                print("pivot: (pivrow,pivcol): (%d,%d)" %(pivrow,pivcol))
+                print("Pivot Element: T[%d, %d]" % (pivrow,pivcol))
+
 
             if not complete: # perform the pivot on pivot entry
                 self.do_pivot(T,pivrow,pivcol, basis,phase)
@@ -669,7 +686,7 @@ class Tableau:
 
     def solve(self):
         # Pivot to basic flexible.
-        
+
         status, complete = self.simplex_solve(self.T,self.n,self.basis,phase=1)
         pseudo_objective  = self.T[-1,-1]
         if self.debug:
@@ -683,10 +700,10 @@ class Tableau:
             # Remove artificial variable columns
             self.T.del_columns(range(self.n + self.n_slack,
                                      self.n + self.n_slack + self.n_artificial))
-        else:
-            # Infeasible without starting point
+        else: # Infeasible without starting point
             status = 2
             if self.debug:
+                print("pseudo_objective(%d) < global_tolerance(%d)" % (pseudo_objective,global_tolerance))
                 print("Infeasible soltion")
 
         if status == 2: # infeasible solution
@@ -696,9 +713,9 @@ class Tableau:
         # Move to phase 2 compuation
         status, complete = self.simplex_solve(self.T,self.n,self.basis,phase = 2)
 
-        if status == 0:                
+        if status == 0:
             solution = list_wrapper([0] * (self.n + self.n_slack + self.n_artificial))
-            
+
             if self.debug:
                 print(" m: %d, n: %d"  %  (self.m, self.n))
                 print(" basis: %s"     %   self.basis[:self.m])
@@ -715,7 +732,7 @@ class Tableau:
 
             obj,ansx = -self.T[-1,-1], solution
             return (0,ansx)
-        
+
         elif status == 3:
             return (1,None)
         else:
