@@ -153,7 +153,7 @@ class Tableau:
         skip_rows = 2 if (phase == 1) else 1
 
         # Mask values less than tolerance
-        ignored = lambda e: (e is None) or ( e <= -tol )
+        ignored = lambda e: (e is None) or ( e <= -tol ) # not negative tolerance
 
         # print(">> T\n %s"%T)
         # print(">> T[:-skip_rows,pivcol] : \n %s",T[:-skip_rows,pivcol])
@@ -172,6 +172,7 @@ class Tableau:
         q = mb / ma
         if self.debug:
             print("q: %s" % q)
+        # this call is not trivial or obvious
         return q.min_index()
 
 

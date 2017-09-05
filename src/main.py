@@ -38,6 +38,7 @@ if __name__ =="__main__":
     parser.add_argument("-d","--debug",action="count",help="enable debug level log")
     parser.add_argument("-t","--tolerance",help="floating point tolerance to tolerate in an intolerable world")
     parser.add_argument("-s","--scipy",action='count',help="Use sci-py instead to compare answers")
+    parser.add_argument("-c","--compare",action='count',help="Compare running all ")
     parser.add_argument("-v","--verify",action='count',help="Verify sci-py instead to compare answers")
 
     args = parser.parse_args()
@@ -54,7 +55,7 @@ if __name__ =="__main__":
     tableau = Tableau(A,b,c,n,m,debug)
     t_anst, t_ansx =  tableau.solve()
 
-    compare = False
+    compare = args.compare
     if compare:
         if debug: print("-------------------------------------------------")
         if debug: print("-------------------- Scipy --------------------")        

@@ -58,7 +58,7 @@ class TestDataRunner(unittest.TestCase):
             (A,b,c,n,m) = main.Reader.parse(file=tf)
             
             algorithms  = {"Tableau" : tableau.Tableau(A,b,c,n,m,debug),
-                           "Simplex" : simplex.Simplex(A,b,c,n,m,debug),
+                           #"Simplex" : simplex.Simplex(A,b,c,n,m,debug),
                            "Scipy"   : scipy_lprog.SciPy(A,b,c,n,m,debug)}
             results  = {}
             anst,ansx = None,None

@@ -12,8 +12,19 @@ from decimal import Decimal
 from itertools import chain
 
 debug = False
-global_tolerance = 1e-12
+global_tolerance = 1e-4
 decimal.getcontext().prec = 64
+
+def map_optional(func,ls):
+    "Maps of the list skipping over but preserving None objects "
+    if ls is None: return None    
+    result =[]
+    for l in ls:
+        if l:
+            result.append(func(l))
+        else:
+            result.append(None)
+    return result
 
 class Matrix:
 
@@ -259,9 +270,8 @@ class list_wrapper():
     def _iseq(self,v) : return isinstance(v,list)    or isinstance(v,list_wrapper)
 
     def min_index(self):
-
         idx = 0
-        min = None
+        m = None
         min_idx = None
         found = False
 
@@ -271,15 +281,17 @@ class list_wrapper():
                 idx += 1
                 continue
 
-            if min is None:
-                min = elem
+            if m is None:
+                m = elem
                 min_idx = idx
 
-            if min > elem:
+            if m > elem:
                 found=True
-                min = pivot_elem
+                m = elem
                 min_idx  = idx
+
             idx += 1
+            
         return (found,min_idx)
 
     def apply_op(self,value,operator):
@@ -357,16 +369,17 @@ class list_wrapper():
     def set_values(l, value,idxs ):
         for idx in idxs: l[idx] = value
 
-    def min_index(l,max=float('inf'),custom_min=min):
-        "Return a pair of (value,index) of elment with minimum index"
-        idx = 0
-        min_idx,min_value = None,None
-        for c_v in l:
-            if c_v is not None and abs(c_v) >= global_tolerance and  ((min_value is None) or (min_value-c_v  >= global_tolerance)):
-                min_value = c_v
-                min_idx   = idx
-            idx+=1
-        return (min_value,min_idx) if ((not min_value is None ) ) else (None,None)
+    # def min_index(l,max=float('inf'),custom_min=min):
+    #     "Return a pair of (value,index) of elment with minimum index"
+    #     print("min index 2")
+    #     idx = 0
+    #     min_idx,min_value = None,None
+    #     for c_v in l:
+    #         if c_v is not None and abs(c_v) >= global_tolerance and  ((min_value is None) or (min_value-c_v  >= global_tolerance)):
+    #             min_value = c_v
+    #             min_idx   = idx
+    #         idx+=1
+    #     return (min_value,min_idx) if ((not min_value is None ) ) else (None,None)
 
         # zl = zip(l,range(len(l)))
         # # hiding a comparison
@@ -490,17 +503,20 @@ class Tableau:
             print(self.T)
 
 
-    def pivot_column(self,T,tol=global_tolerance):
-        """Go through the objective row and find the minimum entry above
-           tolerance"""
+    def pivot_column(self,T,tol=global_tolerance):        
+        """Go through the objective row and find the minimum entry
+           above tolerance"""
+        
         # Ignore all positive values where: positive is defined as
         # anything greater than -tol
         ignored = lambda e: (e is None) or (e >= -tol)
 
         objective = T[-1,:-1].masked_where(ignored)
         idx =  objective.min_index()
+        
         if self.debug:
             print("pivot-column:%s index : %s\n" % (T[-1,:-1], idx[1]))
+            
         return idx
 
 
@@ -512,7 +528,7 @@ class Tableau:
         skip_rows = 2 if (phase == 1) else 1
 
         # Mask values less than tolerance
-        ignored = lambda e: (e is None) or ( e <= -tol )
+        ignored = lambda e: (e is None) or ( e <= -tol ) # not negative tolerance
 
         # print(">> T\n %s"%T)
         # print(">> T[:-skip_rows,pivcol] : \n %s",T[:-skip_rows,pivcol])
@@ -734,6 +750,7 @@ if __name__ =="__main__":
     parser.add_argument("-d","--debug",action="count",help="enable debug level log")
     parser.add_argument("-t","--tolerance",help="floating point tolerance to tolerate in an intolerable world")
     parser.add_argument("-s","--scipy",action='count',help="Use sci-py instead to compare answers")
+    parser.add_argument("-c","--compare",action='count',help="Compare running all ")
     parser.add_argument("-v","--verify",action='count',help="Verify sci-py instead to compare answers")
 
     args = parser.parse_args()
@@ -745,13 +762,12 @@ if __name__ =="__main__":
 
     (A,b,c,n,m) = Reader.parse()
 
-
     if debug:
         print("-------------------- Tableau --------------------")
     tableau = Tableau(A,b,c,n,m,debug)
     t_anst, t_ansx =  tableau.solve()
 
-    compare = False
+    compare = args.compare
     if compare:
         if debug: print("-------------------------------------------------")
         if debug: print("-------------------- Scipy --------------------")        

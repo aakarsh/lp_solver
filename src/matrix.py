@@ -12,7 +12,7 @@ from decimal import Decimal
 from itertools import chain
 
 debug = False
-global_tolerance = 1e-12
+global_tolerance = 1e-4
 decimal.getcontext().prec = 64
 
 def map_optional(func,ls):
@@ -270,27 +270,22 @@ class list_wrapper():
     def _iseq(self,v) : return isinstance(v,list)    or isinstance(v,list_wrapper)
 
     def min_index(self):
-
         idx = 0
-        min = None
+        m = None
         min_idx = None
         found = False
-
         for elem in self.ls:
-
             if elem is None:
                 idx += 1
                 continue
-
-            if min is None:
-                min = elem
+            if m is None:
+                m = elem
                 min_idx = idx
-
-            if min > elem:
+            if m > elem: #TODO cautios about this comaprison
                 found=True
-                min = pivot_elem
+                m = elem
                 min_idx  = idx
-            idx += 1
+            idx += 1            
         return (found,min_idx)
 
     def apply_op(self,value,operator):
@@ -368,16 +363,7 @@ class list_wrapper():
     def set_values(l, value,idxs ):
         for idx in idxs: l[idx] = value
 
-    def min_index(l,max=float('inf'),custom_min=min):
-        "Return a pair of (value,index) of elment with minimum index"
-        idx = 0
-        min_idx,min_value = None,None
-        for c_v in l:
-            if c_v is not None and abs(c_v) >= global_tolerance and  ((min_value is None) or (min_value-c_v  >= global_tolerance)):
-                min_value = c_v
-                min_idx   = idx
-            idx+=1
-        return (min_value,min_idx) if ((not min_value is None ) ) else (None,None)
+
 
         # zl = zip(l,range(len(l)))
         # # hiding a comparison
